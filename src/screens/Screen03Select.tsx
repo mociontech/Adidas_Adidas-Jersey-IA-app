@@ -1,36 +1,13 @@
-import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-
-const jerseys = [
-  {
-    id: 0,
-    src: 'https://www.figma.com/api/mcp/asset/11cdee6f-edf0-4d05-a859-08baf10083d4',
-    label: 'Retro Hombre',
-  },
-  {
-    id: 1,
-    src: 'https://www.figma.com/api/mcp/asset/ba8ddda0-c833-4527-9da9-b48fa3c2fe50',
-    label: 'Retro Mujer',
-  },
-  {
-    id: 2,
-    src: 'https://www.figma.com/api/mcp/asset/ada4af37-c40e-4303-b634-832633b2f1c0',
-    label: 'Local Mujer',
-  },
-  {
-    id: 3,
-    src: 'https://www.figma.com/api/mcp/asset/dddc51a4-4a22-4950-a353-235190e91c4d',
-    label: 'Local Hombre',
-  },
-]
+import { useTryOn } from '../context/TryOnContext'
+import { jerseys } from '../data/jerseys'
 
 export default function Screen03Select() {
   const navigate = useNavigate()
-  const [selected, setSelected] = useState(0)
+  const { selectedJersey, selectJersey } = useTryOn()
 
   return (
     <div className="relative w-full h-full bg-[#3d1eed]">
-      {/* Title */}
       <div
         className="absolute text-white text-center"
         style={{
@@ -38,7 +15,7 @@ export default function Screen03Select() {
           fontWeight: 700,
           fontSize: 48,
           lineHeight: '1.2',
-          width: 596,
+          width: 700,
           left: '50%',
           top: 100,
           transform: 'translateX(-50%)',
@@ -47,39 +24,49 @@ export default function Screen03Select() {
         SELECCIONA TU JERSEY FAVORITA
       </div>
 
-      {/* Subtitle */}
       <div
         className="absolute text-white text-center"
         style={{
           fontFamily: 'Montserrat, sans-serif',
           fontWeight: 700,
-          fontSize: 36,
-          width: 975,
+          fontSize: 32,
+          width: 900,
           left: '50%',
-          top: 300,
+          top: 270,
           transform: 'translateX(-50%)',
         }}
       >
-        PONTE FRESCO Y SIN CHAMARRA
+        Escoge la camiseta que quieres ver puesta sobre tu foto.
       </div>
 
-      {/* Jersey grid */}
       <div
         className="absolute"
         style={{ left: 96, top: 403, width: 887, height: 1120 }}
       >
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 17, height: '100%' }}>
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: '1fr 1fr',
+            gap: 17,
+            height: '100%',
+          }}
+        >
           {jerseys.map((jersey) => (
-            <div
+            <button
               key={jersey.id}
-              onClick={() => setSelected(jersey.id)}
+              onClick={() => selectJersey(jersey.id)}
               style={{
                 borderRadius: 64,
                 overflow: 'hidden',
                 cursor: 'pointer',
-                border: selected === jersey.id ? '6px solid white' : '6px solid transparent',
+                border:
+                  selectedJersey?.id === jersey.id
+                    ? '6px solid white'
+                    : '6px solid transparent',
                 transition: 'border-color 0.2s',
                 position: 'relative',
+                background: 'transparent',
+                padding: 0,
               }}
             >
               <img
@@ -92,12 +79,29 @@ export default function Screen03Select() {
                   display: 'block',
                 }}
               />
-            </div>
+              <div
+                style={{
+                  position: 'absolute',
+                  left: 20,
+                  right: 20,
+                  bottom: 20,
+                  padding: '12px 16px',
+                  borderRadius: 20,
+                  background: 'rgba(0,0,0,0.55)',
+                  color: 'white',
+                  fontFamily: 'Montserrat, sans-serif',
+                  fontWeight: 700,
+                  fontSize: 24,
+                  textAlign: 'center',
+                }}
+              >
+                {jersey.label}
+              </div>
+            </button>
           ))}
         </div>
       </div>
 
-      {/* Button */}
       <button
         onClick={() => navigate('/foto')}
         className="absolute flex items-center justify-center text-white rounded-3xl cursor-pointer"

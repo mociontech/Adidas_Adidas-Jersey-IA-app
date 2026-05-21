@@ -1,20 +1,25 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useTryOn } from '../context/TryOnContext'
 
 export default function Screen02Registro() {
   const navigate = useNavigate()
-  const [nombre, setNombre] = useState('')
-  const [correo, setCorreo] = useState('')
+  const { registration, saveRegistration } = useTryOn()
+  const [nombre, setNombre] = useState(registration.nombre)
+  const [correo, setCorreo] = useState(registration.correo)
 
   const handleSubmit = () => {
     if (nombre.trim() && correo.trim()) {
+      saveRegistration({
+        nombre: nombre.trim(),
+        correo: correo.trim(),
+      })
       navigate('/select')
     }
   }
 
   return (
     <div className="relative w-full h-full bg-[#3d1eed]">
-      {/* Title */}
       <div
         className="absolute text-white text-center"
         style={{
@@ -22,16 +27,31 @@ export default function Screen02Registro() {
           fontWeight: 600,
           fontSize: 96,
           lineHeight: '1.15',
-          width: 520,
+          width: 640,
           left: '50%',
           top: 150,
           transform: 'translateX(-50%)',
         }}
       >
-        Pantalla de registro
+        Registra tus datos
       </div>
 
-      {/* Nombre input */}
+      <div
+        className="absolute text-white text-center"
+        style={{
+          fontFamily: 'Montserrat, sans-serif',
+          fontWeight: 500,
+          fontSize: 28,
+          width: 760,
+          left: '50%',
+          top: 360,
+          transform: 'translateX(-50%)',
+          opacity: 0.9,
+        }}
+      >
+        Usaremos esta informacion para personalizar la experiencia del try-on.
+      </div>
+
       <div
         className="absolute flex items-center"
         style={{
@@ -54,7 +74,7 @@ export default function Screen02Registro() {
           type="text"
           placeholder="Nombre"
           value={nombre}
-          onChange={e => setNombre(e.target.value)}
+          onChange={(event) => setNombre(event.target.value)}
           style={{
             fontFamily: '"Be Vietnam Pro", sans-serif',
             fontSize: 40,
@@ -68,7 +88,6 @@ export default function Screen02Registro() {
         />
       </div>
 
-      {/* Correo input */}
       <div
         className="absolute flex items-center"
         style={{
@@ -91,7 +110,7 @@ export default function Screen02Registro() {
           type="email"
           placeholder="Correo"
           value={correo}
-          onChange={e => setCorreo(e.target.value)}
+          onChange={(event) => setCorreo(event.target.value)}
           style={{
             fontFamily: '"Be Vietnam Pro", sans-serif',
             fontSize: 40,
@@ -105,7 +124,6 @@ export default function Screen02Registro() {
         />
       </div>
 
-      {/* Button */}
       <button
         onClick={handleSubmit}
         className="absolute flex items-center justify-center text-white rounded-3xl cursor-pointer"
@@ -122,7 +140,7 @@ export default function Screen02Registro() {
           border: 'none',
         }}
       >
-        Comenzar
+        Continuar
       </button>
     </div>
   )
