@@ -4,6 +4,7 @@ import { useTryOn } from '../context/TryOnContext'
 
 const imgMask =
   'https://www.figma.com/api/mcp/asset/078d226a-66e1-4b8d-bc25-c85c5ccf0f4b'
+const btnBack = `${import.meta.env.BASE_URL}Elementos/Btn_Back.png`
 
 function captureVideoFrame(video: HTMLVideoElement) {
   const canvas = document.createElement('canvas')
@@ -194,6 +195,35 @@ export default function Screen04TomaDeFoto() {
         Ubicate dentro del marco, con buena luz y el torso visible para que el
         try-on quede mejor.
       </div>
+
+      <button
+        onClick={() => navigate('/select')}
+        disabled={isSubmitting}
+        aria-label="Volver a seleccionar jersey"
+        style={{
+          position: 'absolute',
+          left: 118,
+          bottom: 164,
+          width: 112,
+          height: 112,
+          padding: 0,
+          border: 'none',
+          background: 'transparent',
+          cursor: isSubmitting ? 'not-allowed' : 'pointer',
+          opacity: isSubmitting ? 0.45 : 1,
+          zIndex: 4,
+        }}
+      >
+        <img
+          src={btnBack}
+          alt=""
+          style={{
+            width: '100%',
+            height: '100%',
+            display: 'block',
+          }}
+        />
+      </button>
 
       {!cameraError && countdown !== null && (
         <div

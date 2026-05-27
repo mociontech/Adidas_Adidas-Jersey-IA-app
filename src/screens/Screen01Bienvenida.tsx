@@ -1,7 +1,9 @@
 import { useNavigate } from 'react-router-dom'
+import { useTryOn } from '../context/TryOnContext'
 
 export default function Screen01Bienvenida() {
   const navigate = useNavigate()
+  const { resetExperience } = useTryOn()
 
   return (
     <div className="relative w-full h-full bg-[#3d1eed]">
@@ -24,7 +26,10 @@ export default function Screen01Bienvenida() {
 
       {/* Button */}
       <button
-        onClick={() => navigate('/registro')}
+        onClick={() => {
+          resetExperience()
+          navigate('/registro')
+        }}
         className="absolute flex items-center justify-center text-white rounded-3xl cursor-pointer"
         style={{
           fontFamily: 'Montserrat, sans-serif',

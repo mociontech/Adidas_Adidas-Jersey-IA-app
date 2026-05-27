@@ -1,12 +1,16 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTryOn } from '../context/TryOnContext'
+import TouchKeyboard from '../components/TouchKeyboard'
+
+type ActiveField = 'nombre' | 'correo'
 
 export default function Screen02Registro() {
   const navigate = useNavigate()
   const { registration, saveRegistration } = useTryOn()
   const [nombre, setNombre] = useState(registration.nombre)
   const [correo, setCorreo] = useState(registration.correo)
+  const [activeField, setActiveField] = useState<ActiveField>('nombre')
 
   const handleSubmit = () => {
     if (nombre.trim() && correo.trim()) {
@@ -54,6 +58,7 @@ export default function Screen02Registro() {
 
       <div
         className="absolute flex items-center"
+        onClick={() => setActiveField('nombre')}
         style={{
           width: 855,
           height: 110,
@@ -61,10 +66,14 @@ export default function Screen02Registro() {
           top: 561,
           transform: 'translateX(-50%)',
           background: 'rgba(255,255,255,0.15)',
-          border: '1.5px solid white',
+          border:
+            activeField === 'nombre'
+              ? '4px solid #06adbf'
+              : '1.5px solid white',
           borderRadius: 24,
           padding: '0 36px',
           gap: 20,
+          cursor: 'pointer',
         }}
       >
         <svg width="44" height="44" viewBox="0 0 24 24" fill="none">
@@ -74,6 +83,9 @@ export default function Screen02Registro() {
           type="text"
           placeholder="Nombre"
           value={nombre}
+          readOnly
+          inputMode="none"
+          onFocus={() => setActiveField('nombre')}
           onChange={(event) => setNombre(event.target.value)}
           style={{
             fontFamily: '"Be Vietnam Pro", sans-serif',
@@ -90,6 +102,7 @@ export default function Screen02Registro() {
 
       <div
         className="absolute flex items-center"
+        onClick={() => setActiveField('correo')}
         style={{
           width: 855,
           height: 110,
@@ -97,10 +110,14 @@ export default function Screen02Registro() {
           top: 703,
           transform: 'translateX(-50%)',
           background: 'rgba(255,255,255,0.15)',
-          border: '1.5px solid white',
+          border:
+            activeField === 'correo'
+              ? '4px solid #06adbf'
+              : '1.5px solid white',
           borderRadius: 24,
           padding: '0 36px',
           gap: 20,
+          cursor: 'pointer',
         }}
       >
         <svg width="44" height="44" viewBox="0 0 24 24" fill="none">
@@ -110,6 +127,9 @@ export default function Screen02Registro() {
           type="email"
           placeholder="Correo"
           value={correo}
+          readOnly
+          inputMode="none"
+          onFocus={() => setActiveField('correo')}
           onChange={(event) => setCorreo(event.target.value)}
           style={{
             fontFamily: '"Be Vietnam Pro", sans-serif',
@@ -142,6 +162,19 @@ export default function Screen02Registro() {
       >
         Continuar
       </button>
+
+      <TouchKeyboard
+        value={activeField === 'nombre' ? nombre : correo}
+        onChange={activeField === 'nombre' ? setNombre : setCorreo}
+        onEnter={() => {
+          if (activeField === 'nombre') {
+            setActiveField('correo')
+            return
+          }
+
+          handleSubmit()
+        }}
+      />
     </div>
   )
 }

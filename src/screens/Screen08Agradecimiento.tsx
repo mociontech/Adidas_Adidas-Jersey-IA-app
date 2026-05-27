@@ -1,9 +1,50 @@
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTryOn } from '../context/TryOnContext'
 
 export default function Screen08Agradecimiento() {
   const navigate = useNavigate()
   const { generatedImage, registration, resetTryOn } = useTryOn()
+  const [printStatus, setPrintStatus] = useState<'idle' | 'printing' | 'done' | 'error'>('idle')
+  const [printError, setPrintError] = useState<string | null>(null)
+
+  const handlePrint = async () => {
+    if (!generatedImage) {
+      return
+    }
+
+    setPrintStatus('printing')
+    setPrintError(null)
+
+    try {
+      const response = await fetch('/api/print', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          imageDataUrl: generatedImage,
+        }),
+      })
+
+      const payload = (await response.json()) as {
+        error?: string
+      }
+
+      if (!response.ok) {
+        throw new Error(payload.error ?? 'No fue posible imprimir la imagen.')
+      }
+
+      setPrintStatus('done')
+    } catch (error) {
+      setPrintStatus('error')
+      setPrintError(
+        error instanceof Error
+          ? error.message
+          : 'No fue posible imprimir la imagen.',
+      )
+    }
+  }
 
   return (
     <div className="relative w-full h-full bg-[#3d1eed]">
@@ -37,8 +78,8 @@ export default function Screen08Agradecimiento() {
         }}
       >
         {registration.nombre
-          ? `${registration.nombre}, ya puedes descargar tu imagen generada.`
-          : 'Ya puedes descargar tu imagen generada.'}
+          ? `${registration.nombre}, tu imagen generada esta lista para imprimir.`
+          : 'Tu imagen generada esta lista para imprimir.'}
       </div>
 
       <div
@@ -70,9 +111,9 @@ export default function Screen08Agradecimiento() {
       </div>
 
       {generatedImage ? (
-        <a
-          href={generatedImage}
-          download="adidas-tryon.png"
+        <button
+          onClick={handlePrint}
+          disabled={printStatus === 'printing'}
           className="absolute flex items-center justify-center text-white rounded-3xl cursor-pointer"
           style={{
             fontFamily: 'Montserrat, sans-serif',
@@ -85,11 +126,37 @@ export default function Screen08Agradecimiento() {
             top: 1450,
             transform: 'translateX(-50%)',
             border: 'none',
-            textDecoration: 'none',
+            opacity: printStatus === 'printing' ? 0.65 : 1,
+            cursor: printStatus === 'printing' ? 'wait' : 'pointer',
           }}
         >
-          Descargar imagen
-        </a>
+          {printStatus === 'printing'
+            ? 'Imprimiendo...'
+            : printStatus === 'done'
+              ? 'Imprimir otra copia'
+              : 'Imprimir imagen'}
+        </button>
+      ) : null}
+
+      {printStatus === 'done' || printStatus === 'error' ? (
+        <div
+          className="absolute text-white text-center"
+          style={{
+            fontFamily: 'Montserrat, sans-serif',
+            fontWeight: 600,
+            fontSize: 26,
+            lineHeight: 1.35,
+            width: 800,
+            left: '50%',
+            top: 1595,
+            transform: 'translateX(-50%)',
+            opacity: 0.92,
+          }}
+        >
+          {printStatus === 'done'
+            ? 'La imagen fue enviada a la impresora.'
+            : printError}
+        </div>
       ) : null}
 
       <button
@@ -111,7 +178,7 @@ export default function Screen08Agradecimiento() {
           border: '2px solid rgba(255,255,255,0.7)',
         }}
       >
-        Finalizar
+        Foto Digital
       </button>
     </div>
   )

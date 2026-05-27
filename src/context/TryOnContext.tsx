@@ -27,6 +27,7 @@ type TryOnContextValue = {
   setCapturedPhoto: (photo: string | null) => void
   generateTryOn: (photoDataUrl: string) => Promise<void>
   resetTryOn: () => void
+  resetExperience: () => void
 }
 
 const TryOnContext = createContext<TryOnContextValue | undefined>(undefined)
@@ -107,6 +108,17 @@ export function TryOnProvider({ children }: { children: ReactNode }) {
         }
       },
       resetTryOn() {
+        setCapturedPhoto(null)
+        setGeneratedImage(null)
+        setStatus('idle')
+        setError(null)
+      },
+      resetExperience() {
+        setRegistration({
+          nombre: '',
+          correo: '',
+        })
+        setSelectedJerseyId(0)
         setCapturedPhoto(null)
         setGeneratedImage(null)
         setStatus('idle')
