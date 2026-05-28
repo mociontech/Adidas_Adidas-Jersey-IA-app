@@ -7,6 +7,9 @@ import Screen04TomaDeFoto from './screens/Screen04TomaDeFoto'
 import Screen06EnEspera from './screens/Screen06EnEspera'
 import Screen07ImagenGenerada from './screens/Screen07ImagenGenerada'
 import Screen08Agradecimiento from './screens/Screen08Agradecimiento'
+import Screen09Ticket from './screens/Screen09Ticket'
+import Screen10Impresion from './screens/Screen10Impresion'
+import Screen11QR from './screens/Screen11QR'
 
 const CANVAS_W = 1080
 const CANVAS_H = 1920
@@ -62,6 +65,9 @@ export default function App() {
           <Route path="/espera" element={<Screen06EnEspera />} />
           <Route path="/resultado" element={<Screen07ImagenGenerada />} />
           <Route path="/gracias" element={<Screen08Agradecimiento />} />
+          <Route path="/ticket" element={<Screen09Ticket />} />
+          <Route path="/impresion" element={<Screen10Impresion />} />
+          <Route path="/qr" element={<Screen11QR />} />
         </Routes>
       </ScaledCanvas>
     </BrowserRouter>
