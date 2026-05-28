@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom'
 import { useTryOn } from '../context/TryOnContext'
 
-const imgQR = 'https://www.figma.com/api/mcp/asset/c1cb4fc2-9906-4215-b450-a00742c2ea2d'
+const imgQR = '/elementos/qr-placeholder.png'
 
 export default function Screen11QR() {
   const navigate = useNavigate()

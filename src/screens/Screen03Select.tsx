@@ -3,8 +3,8 @@ import { useNavigate } from 'react-router-dom'
 import { useTryOn } from '../context/TryOnContext'
 import { jerseysByGender, type Gender } from '../data/jerseys'
 
-const arrowLeft = 'https://www.figma.com/api/mcp/asset/14142434-404b-45ea-9b9e-f1280c107326'
-const arrowRight = 'https://www.figma.com/api/mcp/asset/6fbb35a4-bf92-4183-90c2-447ed712547f'
+const arrowLeft = '/elementos/arrow-left.svg'
+const arrowRight = '/elementos/arrow-right.svg'
 
 export default function Screen03Select() {
   const navigate = useNavigate()

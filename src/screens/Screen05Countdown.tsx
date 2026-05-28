@@ -2,8 +2,6 @@ import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTryOn } from '../context/TryOnContext'
 
-const imgMask =
-  'https://www.figma.com/api/mcp/asset/4bde7a33-873f-4cad-a3c0-74a357ceac89'
 
 function captureVideoFrame(video: HTMLVideoElement) {
   const canvas = document.createElement('canvas')
@@ -180,16 +178,14 @@ export default function Screen05Countdown() {
         </div>
       )}
 
-      <img
-        src={imgMask}
-        alt=""
+      <div
         style={{
           position: 'absolute',
-          width: 1080,
-          height: 1920,
-          left: 0,
-          top: 0,
+          inset: 0,
+          border: '10px solid #3d1eed',
+          borderRadius: 40,
           pointerEvents: 'none',
+          zIndex: 2,
         }}
       />
     </div>

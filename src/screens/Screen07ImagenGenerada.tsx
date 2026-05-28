@@ -1,8 +1,6 @@
 import { useNavigate } from 'react-router-dom'
 import { useTryOn } from '../context/TryOnContext'
 
-const imgMask =
-  'https://www.figma.com/api/mcp/asset/8c5e24d1-6a1d-4467-a962-74a5278a51b7'
 
 export default function Screen07ImagenGenerada() {
   const navigate = useNavigate()
@@ -96,16 +94,14 @@ export default function Screen07ImagenGenerada() {
         </div>
       )}
 
-      <img
-        src={imgMask}
-        alt=""
+      <div
         style={{
           position: 'absolute',
-          width: 1080,
-          height: 1920,
-          left: 0,
-          top: 0,
+          inset: 0,
+          border: '10px solid #3d1eed',
+          borderRadius: 40,
           pointerEvents: 'none',
+          zIndex: 2,
         }}
       />
 

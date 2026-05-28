@@ -4,7 +4,11 @@
       "Bash(npx tailwindcss *)",
       "mcp__figma__get_design_context",
       "mcp__figma__get_metadata",
-      "Bash(npm run *)"
+      "Bash(npm run *)",
+      "Bash(cp arrow-left.png arrow-left.svg)",
+      "Bash(cp arrow-right.png arrow-right.svg)",
+      "Bash(rm mask-camara.png mask-countdown.png mask-resultado.png)",
+      "Bash(python -c ' *)"
     ]
   }
 }
