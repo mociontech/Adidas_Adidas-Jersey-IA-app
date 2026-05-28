@@ -245,18 +245,30 @@ app.post('/api/try-on', upload.single('photo'), async (request, response) => {
       return
     }
 
-    const jerseyResponse = await fetch(jerseyUrl)
+    let jerseyArrayBuffer
+    let jerseyMimeType = 'image/png'
 
-    if (!jerseyResponse.ok) {
-      response.status(502).json({
-        error: 'No fue posible descargar la referencia del jersey.',
-      })
-      return
+    if (jerseyUrl.startsWith('/')) {
+      // Local file in public folder
+      const localPath = path.join(projectRoot, 'public', jerseyUrl)
+      const fileBuffer = await fs.readFile(localPath)
+      jerseyArrayBuffer = fileBuffer.buffer.slice(
+        fileBuffer.byteOffset,
+        fileBuffer.byteOffset + fileBuffer.byteLength,
+      )
+    } else {
+      const jerseyResponse = await fetch(jerseyUrl)
+      if (!jerseyResponse.ok) {
+        response.status(502).json({
+          error: 'No fue posible descargar la referencia del jersey.',
+        })
+        return
+      }
+      jerseyArrayBuffer = await jerseyResponse.arrayBuffer()
+      jerseyMimeType = jerseyResponse.headers.get('content-type') || 'image/png'
     }
 
-    const jerseyArrayBuffer = await jerseyResponse.arrayBuffer()
     const photoMimeType = request.file.mimetype || 'image/png'
-    const jerseyMimeType = jerseyResponse.headers.get('content-type') || 'image/png'
     const photoFile = await toFile(
       Buffer.from(request.file.buffer),
       request.file.originalname || 'photo.png',
