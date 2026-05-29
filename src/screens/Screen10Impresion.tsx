@@ -1,15 +1,18 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTryOn } from '../context/TryOnContext'
 
 export default function Screen10Impresion() {
   const navigate = useNavigate()
-  const { generatedImage, resetExperience } = useTryOn()
+  const { generatedImage } = useTryOn()
+  const printStartedRef = useRef(false)
   const [status, setStatus] = useState<'printing' | 'done' | 'error'>('printing')
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
 
   useEffect(() => {
-    if (!generatedImage) return
+    if (!generatedImage || printStartedRef.current) return
+
+    printStartedRef.current = true
 
     fetch('/api/print', {
       method: 'POST',
@@ -111,10 +114,7 @@ export default function Screen10Impresion() {
 
       {/* Finalizar button */}
       <button
-        onClick={() => {
-          resetExperience()
-          navigate('/bienvenida')
-        }}
+        onClick={() => navigate('/qr')}
         style={{
           position: 'absolute',
           fontFamily: 'Montserrat, sans-serif',

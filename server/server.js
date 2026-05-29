@@ -35,24 +35,65 @@ async function printImageOnWindows(imageBuffer, printerName) {
     throw new Error('La impresion directa solo esta configurada para Windows.')
   }
 
-  const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'adidas-print-'))
-  const imagePath = path.join(tempDir, 'try-on.png')
-  const scriptPath = path.join(tempDir, 'print-image.ps1')
+const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'adidas-print-'))
+const imagePath = path.join(tempDir, 'try-on.png')
+const preparedImagePath = path.join(tempDir, 'try-on-print.png')
+const scriptPath = path.join(tempDir, 'print-image.ps1')
+const debugPrintPath = path.join(projectRoot, 'tmp-print-preview.png')
 
   const script = `
 param(
   [Parameter(Mandatory = $true)][string]$ImagePath,
+  [Parameter(Mandatory = $true)][string]$PreparedImagePath,
+  [Parameter(Mandatory = $true)][string]$DebugPrintPath,
   [Parameter(Mandatory = $false)][string]$PrinterName
 )
 
 Add-Type -AssemblyName System.Drawing
 
+$source = [System.Drawing.Image]::FromFile($ImagePath)
+$portraitWidth = 1240
+$portraitHeight = 1844
+$safeScale = 0.97
+$portraitCanvas = New-Object System.Drawing.Bitmap($portraitWidth, $portraitHeight)
+$portraitCanvas.SetResolution(300, 300)
+$portraitGraphics = [System.Drawing.Graphics]::FromImage($portraitCanvas)
+$portraitGraphics.Clear([System.Drawing.Color]::Black)
+$portraitGraphics.InterpolationMode = [System.Drawing.Drawing2D.InterpolationMode]::HighQualityBicubic
+$portraitGraphics.SmoothingMode = [System.Drawing.Drawing2D.SmoothingMode]::HighQuality
+$portraitGraphics.PixelOffsetMode = [System.Drawing.Drawing2D.PixelOffsetMode]::HighQuality
+$portraitGraphics.CompositingQuality = [System.Drawing.Drawing2D.CompositingQuality]::HighQuality
+
+$sourceRatio = $source.Width / $source.Height
+$portraitRatio = $portraitWidth / $portraitHeight
+
+if ($sourceRatio -gt $portraitRatio) {
+  $drawWidth = $portraitWidth
+  $drawHeight = [int]($drawWidth / $sourceRatio)
+} else {
+  $drawHeight = $portraitHeight
+  $drawWidth = [int]($drawHeight * $sourceRatio)
+}
+
+$drawWidth = [int]($drawWidth * $safeScale)
+$drawHeight = [int]($drawHeight * $safeScale)
+$drawX = [int](($portraitWidth - $drawWidth) / 2)
+$drawY = [int](($portraitHeight - $drawHeight) / 2)
+$portraitGraphics.DrawImage($source, $drawX, $drawY, $drawWidth, $drawHeight)
+$portraitGraphics.Dispose()
+$source.Dispose()
+
+$portraitCanvas.RotateFlip([System.Drawing.RotateFlipType]::Rotate90FlipNone)
+$portraitCanvas.Save($PreparedImagePath, [System.Drawing.Imaging.ImageFormat]::Png)
+$portraitCanvas.Save($DebugPrintPath, [System.Drawing.Imaging.ImageFormat]::Png)
+$portraitCanvas.Dispose()
+
 $document = New-Object System.Drawing.Printing.PrintDocument
 $document.DocumentName = 'Adidas Try-On'
 $document.OriginAtMargins = $false
 $document.DefaultPageSettings.Margins = New-Object System.Drawing.Printing.Margins(0, 0, 0, 0)
-$document.DefaultPageSettings.Landscape = $false
-$document.DefaultPageSettings.PaperSize = New-Object System.Drawing.Printing.PaperSize('4x6', 400, 600)
+$document.DefaultPageSettings.Landscape = $true
+$document.DefaultPageSettings.PaperSize = New-Object System.Drawing.Printing.PaperSize('6x4', 600, 400)
 
 if ($PrinterName) {
   $document.PrinterSettings.PrinterName = $PrinterName
@@ -64,12 +105,12 @@ if (-not $document.PrinterSettings.IsValid) {
 
 $paperSize = $null
 foreach ($paper in $document.PrinterSettings.PaperSizes) {
-  $isFourBySix = (
-    (($paper.Width -ge 390 -and $paper.Width -le 410) -and ($paper.Height -ge 590 -and $paper.Height -le 610)) -or
-    (($paper.Width -ge 590 -and $paper.Width -le 610) -and ($paper.Height -ge 390 -and $paper.Height -le 410))
+  $isSixByFour = (
+    (($paper.Width -ge 590 -and $paper.Width -le 630) -and ($paper.Height -ge 390 -and $paper.Height -le 430)) -or
+    (($paper.Width -ge 390 -and $paper.Width -le 430) -and ($paper.Height -ge 590 -and $paper.Height -le 630))
   )
 
-  if ($isFourBySix) {
+  if ($isSixByFour) {
     $paperSize = $paper
     break
   }
@@ -79,7 +120,7 @@ if ($paperSize) {
   $document.DefaultPageSettings.PaperSize = $paperSize
 }
 
-$image = [System.Drawing.Image]::FromFile($ImagePath)
+$image = [System.Drawing.Image]::FromFile($PreparedImagePath)
 
 $handler = [System.Drawing.Printing.PrintPageEventHandler]{
   param($sender, $event)
@@ -91,34 +132,9 @@ $handler = [System.Drawing.Printing.PrintPageEventHandler]{
   $event.Graphics.PixelOffsetMode = [System.Drawing.Drawing2D.PixelOffsetMode]::HighQuality
   $event.Graphics.CompositingQuality = [System.Drawing.Drawing2D.CompositingQuality]::HighQuality
 
-  $paperWidth = [single]$event.PageSettings.PaperSize.Width
-  $paperHeight = [single]$event.PageSettings.PaperSize.Height
-
-  if ($paperWidth -gt $paperHeight) {
-    $temp = $paperWidth
-    $paperWidth = $paperHeight
-    $paperHeight = $temp
-  }
-
-  $left = -1 * [single]$event.PageSettings.HardMarginX
-  $top = -1 * [single]$event.PageSettings.HardMarginY
-  $bounds = New-Object System.Drawing.RectangleF -ArgumentList $left, $top, $paperWidth, $paperHeight
-
-  $imageRatio = $image.Width / $image.Height
-  $pageRatio = $bounds.Width / $bounds.Height
-
-  if ($imageRatio -gt $pageRatio) {
-    $drawHeight = $bounds.Height
-    $drawWidth = [single]($drawHeight * $imageRatio)
-  } else {
-    $drawWidth = $bounds.Width
-    $drawHeight = [single]($drawWidth / $imageRatio)
-  }
-
-  $x = [single]($bounds.X + (($bounds.Width - $drawWidth) / 2))
-  $y = [single]($bounds.Y + (($bounds.Height - $drawHeight) / 2))
-
-  $event.Graphics.DrawImage($image, $x, $y, $drawWidth, $drawHeight)
+  $x = -1 * [single]$event.PageSettings.HardMarginX
+  $y = -1 * [single]$event.PageSettings.HardMarginY
+  $event.Graphics.DrawImage($image, $x, $y, [single]$image.Width, [single]$image.Height)
   $event.HasMorePages = $false
 }
 
@@ -147,6 +163,8 @@ try {
           '-File',
           scriptPath,
           imagePath,
+          preparedImagePath,
+          debugPrintPath,
           printerName,
         ],
         { windowsHide: true },
@@ -285,16 +303,28 @@ app.post('/api/try-on', upload.single('photo'), async (request, response) => {
     )
 
     const prompt = [
-      'Create a realistic virtual try-on edit using the two reference images.',
-      'The first image is the person photo and must remain the base composition.',
+      'Create a premium football video-game style virtual try-on using the two reference images.',
+      'The final image must look like a stylized 3D character render from a modern football video game, not live-action footage.',
+      'Use a high-end metahuman-style athlete look with visible CG skin shading, game-engine lighting, 3D mesh surface quality, expressive game-character eyes, rendered hair, and polished sports-game materials.',
+      'Preserve the person identity and facial likeness very closely. Keep the same face shape, eye spacing, nose shape, mouth shape, smile, jawline, eyebrows, hairline, hairstyle, facial hair, age, and distinctive facial features from the first image.',
+      'The face should be converted into a stylized 3D game avatar version of the same person, not redesigned as a different person. Apply a game-character skin shader, clean surface detail, no photo noise, rendered eyebrows, rendered hair strands, and clearly CG eyes while keeping the original facial proportions.',
+      'Avoid a live-action face or documentary capture look. The result should feel like the person was created inside a next-generation football game character creator.',
+      'The image should feel like a playable football game character portrait or cover render with cinematic stadium lighting and a heroic match-day presentation.',
+      'The first image is the person photo and must remain the base for identity, face, hairstyle, pose, body proportions, skin tone, hands, and camera angle.',
+      'Transform the background into a cinematic Mexican football stadium scene with green pitch tones, dramatic arena lights, crowd atmosphere, and a premium match-day environment.',
+      'The stadium should feel inspired by football in Mexico, but do not add readable text, invented sponsor logos, or fake team branding in the background.',
+      'Transform the scene and finish into a stylized 3D football video game render with physically based game materials, ambient occlusion, rim lighting, depth of field, and idealized athletic proportions, but keep the person recognizable and make the selected jersey the main visual focus.',
       'Replace only the visible upper-body garment with the soccer jersey from the second image.',
-      'Preserve the person identity, face, hairstyle, pose, body proportions, skin tone, pants, hands, background, camera angle, and lighting.',
-      'Match the jersey design faithfully, including color blocking, stripes, logos, collar, and overall silhouette.',
-      'Make the garment fit naturally over the torso with realistic fabric folds and shadows.',
-      'Do not add hats, scarves, extra accessories, or text.',
+      'The selected jersey reference is mandatory and must be followed faithfully.',
+      'Preserve the Adidas logo with high fidelity. Do not warp, redraw, replace, mirror, misspell, blur, stylize beyond recognition, or distort the Adidas logo.',
+      'Preserve the Mexico national team crest with high fidelity. Do not warp, redraw, replace, mirror, misspell, blur, stylize beyond recognition, or distort the crest.',
+      'Preserve the selected jersey design as much as possible, including exact color blocking, pattern, stripes, sleeve trim, collar shape, logos, crest placement, Adidas logo placement, fabric panels, proportions, and overall silhouette.',
+      'The jersey must match the style selected by the user, not a generic Mexico jersey and not a different Adidas design.',
+      'Make the garment fit naturally over the torso with stylized 3D fabric folds, stitching, shadows, woven fabric texture, and game-render material detail.',
+      'Do not add hats, scarves, extra accessories, sponsor text, invented logos, alternate team crests, or extra typography.',
       `Selected jersey: ${jerseyLabel || 'Adidas jersey'}.`,
       jerseyPromptHint ? `Fit guidance: ${jerseyPromptHint}.` : '',
-      'Output a polished, photorealistic portrait suitable for a branded fan activation.',
+      'Output a polished stylized 3D metahuman-style football portrait suitable for a premium branded fan activation.',
     ]
       .filter(Boolean)
       .join(' ')
